@@ -11,14 +11,39 @@ def log(msg):
 
 def find_uv():
     """Find uv executable in LichtFeld installation."""
-    # Try common paths
-    possible_paths = [
-        os.path.join(os.path.dirname(sys.executable), '..', '..', '..', 'bin', 'uv.exe'),
-        shutil.which('uv'),
+    # Try in PATH first
+    uv_in_path = shutil.which('uv')
+    if uv_in_path:
+        return uv_in_path
+    
+    # Search common locations relative to python executable
+    # Plugin venv structure: .lichtfeld/plugins/<name>/.venv/Scripts/python.exe
+    # LichtFeld structure: <lichtfeld_dir>/bin/uv.exe
+    
+    search_dirs = [
+        # From venv, go up to find bin directory
+        os.path.join(os.path.dirname(sys.executable), '..', '..', '..', '..', '..'),
+        # Try user's home directory repos
+        os.path.expanduser('~/repos'),
+        # Try common Windows install locations
+        'C:\\Program Files\\LichtFeld Studio',
+        'C:\\Program Files (x86)\\LichtFeld Studio',
     ]
-    for path in possible_paths:
-        if path and os.path.isfile(path):
-            return os.path.abspath(path)
+    
+    for search_dir in search_dirs:
+        if not os.path.isdir(search_dir):
+            continue
+        # Search for uv.exe in this directory tree (max depth 3)
+        for root, dirs, files in os.walk(search_dir):
+            # Limit search depth
+            depth = root[len(search_dir):].count(os.sep)
+            if depth > 3:
+                continue
+            if 'uv.exe' in files:
+                uv_path = os.path.join(root, 'uv.exe')
+                if os.path.isfile(uv_path):
+                    return os.path.abspath(uv_path)
+    
     return None
 
 def main():
