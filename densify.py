@@ -68,6 +68,12 @@ try:
 except Exception as e:
     _ROMA_ERROR = str(e)
     _ROMA_OK = False
+    # Create dummy torch module to avoid NameError in class definitions
+    import types
+    torch = types.ModuleType('torch')
+    torch.inference_mode = lambda: lambda f: f  # Dummy decorator
+    torch.device = lambda x: x  # Dummy device
+    torch.Tensor = object  # Dummy Tensor type
 
 
 # ==========================
