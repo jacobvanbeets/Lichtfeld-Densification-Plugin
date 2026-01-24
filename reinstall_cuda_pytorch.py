@@ -3,9 +3,23 @@
 
 import subprocess
 import sys
+import os
+import shutil
 
 def log(msg):
     print(f"[CUDA PyTorch Installer] {msg}", flush=True)
+
+def find_uv():
+    """Find uv executable in LichtFeld installation."""
+    # Try common paths
+    possible_paths = [
+        os.path.join(os.path.dirname(sys.executable), '..', '..', '..', 'bin', 'uv.exe'),
+        shutil.which('uv'),
+    ]
+    for path in possible_paths:
+        if path and os.path.isfile(path):
+            return os.path.abspath(path)
+    return None
 
 def main():
     log("Checking PyTorch installation...")
@@ -27,11 +41,21 @@ def main():
     except ImportError:
         log("PyTorch not found - will install CUDA version...")
     
+    # Find uv executable
+    uv_path = find_uv()
+    if not uv_path:
+        log("ERROR: Could not find uv executable. Cannot reinstall PyTorch.")
+        log("Please manually install CUDA PyTorch using:")
+        log(f"  uv pip install torch>=2.6.0 torchvision>=0.21.0 --index-url https://download.pytorch.org/whl/cu128 --python {sys.executable}")
+        return 1
+    
+    log(f"Found uv at: {uv_path}")
+    
     # Uninstall existing torch/torchvision
     log("Uninstalling CPU-only PyTorch...")
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "uninstall", "-y", "torch", "torchvision"],
+            [uv_path, "pip", "uninstall", "-y", "torch", "torchvision", "--python", sys.executable],
             check=False,
             capture_output=True
         )
@@ -43,10 +67,11 @@ def main():
     try:
         result = subprocess.run(
             [
-                sys.executable, "-m", "pip", "install",
+                uv_path, "pip", "install",
                 "torch>=2.6.0",
                 "torchvision>=0.21.0",
-                "--index-url", "https://download.pytorch.org/whl/cu128"
+                "--index-url", "https://download.pytorch.org/whl/cu128",
+                "--python", sys.executable
             ],
             check=True,
             capture_output=True,
