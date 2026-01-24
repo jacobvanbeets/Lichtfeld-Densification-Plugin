@@ -253,7 +253,7 @@ class RomaMatcher:
         self.h_resized = self.model.H_lr
         log(f"RoMaV2 initialized with setting='{setting}' (H_lr={self.model.H_lr}, W_lr={self.model.W_lr}) on {device}")
 
-    def _preprocess_image_batch(self, images: List[Image.Image]) -> torch.Tensor:
+    def _preprocess_image_batch(self, images: List[Image.Image]) -> "torch.Tensor":
         """Convert PIL images to normalized tensor batch on GPU.
         
         Args:
