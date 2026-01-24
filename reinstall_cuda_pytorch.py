@@ -24,6 +24,9 @@ def find_uv():
 def main():
     log("Checking PyTorch installation...")
     
+    has_cuda = False
+    pytorch_broken = False
+    
     try:
         import torch
         has_cuda = torch.cuda.is_available()
@@ -38,6 +41,12 @@ def main():
             
         log("CPU-only PyTorch detected - reinstalling with CUDA support...")
         
+    except OSError as e:
+        if "shm.dll" in str(e) or "WinError 126" in str(e):
+            log(f"PyTorch installation is broken (DLL error) - will reinstall with CUDA support...")
+            pytorch_broken = True
+        else:
+            raise
     except ImportError:
         log("PyTorch not found - will install CUDA version...")
     
