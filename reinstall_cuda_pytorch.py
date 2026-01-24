@@ -105,6 +105,7 @@ def main():
                 "torch>=2.6.0",
                 "torchvision>=0.21.0",
                 "--index-url", "https://download.pytorch.org/whl/cu128",
+                "--reinstall",
                 "--python", sys.executable
             ],
             check=True,
